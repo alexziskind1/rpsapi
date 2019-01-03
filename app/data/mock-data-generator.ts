@@ -117,7 +117,7 @@ export function getMeUserBase64(index: number): PtUserWithAuth {
 export function getMeUser(index: number): PtUserWithAuth {
     const date = faker.date.past(1);
     const userMe: PtUserWithAuth = {
-        authInfo: { email: 'alex@email.com', password: 'nuvious' },
+        authInfo: { email: 'alex@nuvious.com', password: 'nuvious' },
         avatar: 'app/images/avatars/me/me.png',
         dateCreated: date,
         dateModified: date,
@@ -162,7 +162,7 @@ export function generateUser(index: number): PtUserWithAuth {
     const avatar = `app/images/avatars/${genderBool ? 'males' : 'females'}/image-${index + 1}.png`;
 
     const authInfo: PtUserAuthInfo = {
-        email: `${firstName}.${lastName}@${faker.internet.domainName}`,
+        email: `${firstName}.${lastName}@${faker.internet.domainName()}`,
         password: 'nuvious',
     };
 
