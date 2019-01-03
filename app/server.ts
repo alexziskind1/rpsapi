@@ -7,16 +7,29 @@ import { Express, Request, Response, Router } from 'express';
 import * as mockgen from './data/mock-data-generator';
 
 import { PtUserWithAuth } from './shared/models';
-import { PtAuthToken, PtComment, PtItem, PtLoginModel, PtRegisterModel, PtTask } from './shared/models/domain';
+import { PtAuthToken, PtComment, PtItem, PtLoginModel, PtRegisterModel, PtTask, PtUser } from './shared/models/domain';
 import { newGuid } from './util/guid';
 
 const port = 8080;
 
 const usersPerPage = 20;
 
-const generatedPtUsers = mockgen.generateUsers();
+const generatedPtUserWithAuth = mockgen.generateUsers();
+const generatedPtUsers = generatedPtUserWithAuth.map((u) => {
+    const user: PtUser = {
+        avatar: u.avatar,
+        dateCreated: u.dateCreated,
+        dateDeleted: u.dateDeleted,
+        dateModified: u.dateModified,
+        fullName: u.fullName,
+        id: u.id,
+        title: u.title
+    };
+    return user;
+});
 const generatedPtItems = mockgen.generatePTItems(generatedPtUsers);
 
+let currentPtUsersWithAuth = generatedPtUserWithAuth.slice(0);
 let currentPtUsers = generatedPtUsers.slice(0);
 let currentPtItems = generatedPtItems.slice(0);
 
@@ -68,7 +81,7 @@ router.post('/auth', (req: Request, res: Response) => {
 
             const loginModel = req.body.loginModel as PtLoginModel;
 
-            const foundUser = currentPtUsers.find((u) =>
+            const foundUser = currentPtUsersWithAuth.find((u) =>
                 u.authInfo!.email === loginModel.username &&
                 u.authInfo!.password === loginModel.password
             );
@@ -105,13 +118,13 @@ router.post('/register', (req: Request, res: Response) => {
 
             const regModel = req.body.registerModel as PtRegisterModel;
 
-            const usernameExists = !!currentPtUsers.find((u) => u.authInfo!.email === regModel.username);
+            const usernameExists = !!currentPtUsersWithAuth.find((u) => u.authInfo!.email === regModel.username);
 
             if (usernameExists) {
                 res.status(500);
                 res.json('User exists');
             } else {
-                const nextUserId = getNextIntergerId(currentPtUsers);
+                const nextUserId = getNextIntergerId(currentPtUsersWithAuth);
 
                 const newUser = {
                     authInfo: { email: regModel.username, password: regModel.password },
@@ -119,7 +132,7 @@ router.post('/register', (req: Request, res: Response) => {
                     id: nextUserId
                 } as PtUserWithAuth;
 
-                currentPtUsers = [...currentPtUsers, newUser];
+                currentPtUsersWithAuth = [...currentPtUsersWithAuth, newUser];
 
                 res.json({
                     authToken,
