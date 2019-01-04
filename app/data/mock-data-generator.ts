@@ -1,5 +1,4 @@
-
-// nativescript imports
+// node imports
 import * as fileSystemModule from 'fs';
 
 // 3rd party imports
@@ -17,7 +16,7 @@ import { ItemTypeEnum, PriorityEnum, StatusEnum } from '../shared/models/domain/
 import { PtItemType } from '../shared/models/domain/types';
 import { toTitleCase } from '../util/string-utils';
 
-const NUM_PT_ITEMS = 50;
+const NUM_PT_ITEMS = 100;
 const NUM_USERS = 20;
 
 export function generatePTItems(users: PtUserWithAuth[]): PtItem[] {
@@ -118,7 +117,7 @@ export function getMeUser(index: number): PtUserWithAuth {
     const date = faker.date.past(1);
     const userMe: PtUserWithAuth = {
         authInfo: { email: 'alex@nuvious.com', password: 'nuvious' },
-        avatar: 'app/images/avatars/me/me.png',
+        avatar: 'images/avatars/me/me.png',
         dateCreated: date,
         dateModified: date,
         fullName: 'Alex Ziskind',
@@ -159,7 +158,7 @@ export function generateUser(index: number): PtUserWithAuth {
     const lastName = faker.name.lastName(genderBool ? 1 : 0);
     const date = faker.date.past(1);
 
-    const avatar = `app/images/avatars/${genderBool ? 'males' : 'females'}/image-${index + 1}.png`;
+    const avatar = `images/avatars/${genderBool ? 'males' : 'females'}/image-${index + 1}.png`;
 
     const authInfo: PtUserAuthInfo = {
         email: `${firstName}.${lastName}@${faker.internet.domainName()}`,
