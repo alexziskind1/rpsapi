@@ -209,6 +209,9 @@ router.get('/item/:id', (req: Request, res: Response) => {
     let found = false;
     if (foundItem) {
         found = true;
+
+        const undeletedTasks = foundItem.tasks.filter((t) => t.dateDeleted === undefined);
+        foundItem.tasks = undeletedTasks;
     }
 
     if (!found) {
@@ -289,6 +292,9 @@ router.post('/task', (req: Request, res: Response) => {
             const newTask = req.body.task as PtTask;
             const itemId = parseInt(req.body.itemId, undefined);
 
+            // tslint:disable-next-line:no-console
+            console.log('new task title: ' + newTask.title);
+
             const foundItem = currentPtItems.find((i) => i.id === itemId && i.dateDeleted === undefined);
 
             if (foundItem) {
@@ -327,6 +333,12 @@ router.put('/task/:id', (req: Request, res: Response) => {
             const modifiedTask = req.body.task as PtTask;
             const itemId = parseInt(req.body.itemId, undefined);
 
+            // tslint:disable-next-line:no-console
+            console.log('updated task title: ' + modifiedTask.title);
+
+            // tslint:disable-next-line:no-console
+            console.log('updated task complete: ' + modifiedTask.completed);
+
             const foundItem = currentPtItems.find((i) => i.id === itemId && i.dateDeleted === undefined);
 
             if (foundItem) {
@@ -348,15 +360,61 @@ router.put('/task/:id', (req: Request, res: Response) => {
                 if (!found) {
                     res.status(404);
                 }
-                res.json({
-                    id: taskId,
-                    result: modifiedTask
-                });
+                res.json(modifiedTask);
             } else {
                 res.status(404);
                 res.json(null);
             }
         }
+    }
+});
+
+router.post('/task/:itemId/:id', (req: Request, res: Response) => {
+    const itemIdStr = req.params.itemId;
+    const taskIdStr = req.params.id;
+
+    if (itemIdStr && taskIdStr) {
+        const itemId = parseInt(req.params.itemId, undefined);
+        const taskId = parseInt(req.params.id, undefined);
+
+        const foundItem = currentPtItems.find((i) => i.id === itemId && i.dateDeleted === undefined);
+        if (foundItem) {
+            let found = false;
+            // tslint:disable-next-line:no-console
+            console.log('found item' + foundItem.tasks.length);
+            const updatedTasks = foundItem.tasks.map((t) => {
+                if (t.id === taskId) {
+                    found = true;
+                    const deletedTask: PtTask = {
+                        ...t,
+                        dateDeleted: new Date()
+                    };
+                    return deletedTask;
+                } else { return t; }
+            });
+            // tslint:disable-next-line:no-console
+            console.log('updated tasks item' + updatedTasks.length);
+
+            const updatedItem = Object.assign({}, foundItem, { tasks: updatedTasks });
+
+            const updatedItems = currentPtItems.map((i) => {
+                if (i.id === itemId) { return updatedItem; } else { return i; }
+            });
+
+            currentPtItems = updatedItems;
+
+            if (!found) {
+                res.status(404);
+            }
+            res.json(true);
+
+        } else {
+            res.status(404);
+            res.json(false);
+        }
+    } else {
+        res.status(404);
+        res.json(false);
     }
 });
 
