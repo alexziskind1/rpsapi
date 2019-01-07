@@ -16,7 +16,7 @@ import { ItemTypeEnum, PriorityEnum, StatusEnum } from '../shared/models/domain/
 import { PtItemType } from '../shared/models/domain/types';
 import { toTitleCase } from '../util/string-utils';
 
-const NUM_PT_ITEMS = 100;
+const NUM_PT_ITEMS = 200;
 const NUM_USERS = 20;
 
 export function generatePTItems(users: PtUserWithAuth[]): PtItem[] {
@@ -186,7 +186,7 @@ export function generateComments(users: PtUserWithAuth[]): PtComment[] {
 
 export function generateComment(index: number, users: PtUserWithAuth[]): PtComment {
     const date = faker.date.past(1);
-    const commentText = toTitleCase(faker.lorem.sentence(20, 40));
+    const commentText = toTitleCase(faker.lorem.sentence(50, 40));
 
     const comment: PtComment = {
         dateCreated: date,
