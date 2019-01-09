@@ -515,23 +515,15 @@ router.get('/stats/statuscounts', (req: Request, res: Response) => {
         (i.status === 'Open' || i.status === 'ReOpened') && i.dateDeleted === undefined;
     const closedItemsFilter = (i: PtItem) =>
         i.status === 'Closed' && i.dateDeleted === undefined;
-    let userFilter = (item: PtItem) => true;
-    let rangeFilter = (item: PtItem) => true;
 
-    if (req.query.userId) {
-        const userId = parseInt(req.query.userId, undefined);
-        if (userId > 0) {
-            userFilter = (item: PtItem) => item.assignee.id === userId;
-        }
-    }
-    if (req.query.dateStart && req.query.dateEnd) {
-        const dateStart = new Date(req.query.dateStart);
-        const dateEnd = new Date(req.query.dateEnd);
-        rangeFilter = (item: PtItem) => item.dateCreated >= dateStart && item.dateCreated <= dateEnd;
-    }
-
-    const openItems = currentPtItems.filter(openItemsFilter).filter(userFilter).filter(rangeFilter);
-    const closedItems = currentPtItems.filter(closedItemsFilter).filter(userFilter).filter(rangeFilter);
+    const openItems = currentPtItems
+        .filter(openItemsFilter)
+        .filter(getItemFilterByUser(req))
+        .filter(getItemFilterByDateRange(req));
+    const closedItems = currentPtItems
+        .filter(closedItemsFilter)
+        .filter(getItemFilterByUser(req))
+        .filter(getItemFilterByDateRange(req));
     const activeItemsCount = openItems.length + closedItems.length;
 
     res.json({
