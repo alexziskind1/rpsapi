@@ -508,6 +508,123 @@ router.put('/users/:id', (req: Request, res: Response) => {
     });
 });
 
+// statistics
+
+router.get('/stats/statuscounts', (req: Request, res: Response) => {
+    const openItemsFilter = (i: PtItem) =>
+        (i.status === 'Open' || i.status === 'ReOpened') && i.dateDeleted === undefined;
+    const closedItemsFilter = (i: PtItem) =>
+        i.status === 'Closed' && i.dateDeleted === undefined;
+    let userFilter = (item: PtItem) => true;
+    let rangeFilter = (item: PtItem) => true;
+
+    if (req.query.userId) {
+        const userId = parseInt(req.query.userId, undefined);
+        if (userId > 0) {
+            userFilter = (item: PtItem) => item.assignee.id === userId;
+        }
+    }
+    if (req.query.dateStart && req.query.dateEnd) {
+        const dateStart = new Date(req.query.dateStart);
+        const dateEnd = new Date(req.query.dateEnd);
+        rangeFilter = (item: PtItem) => item.dateCreated >= dateStart && item.dateCreated <= dateEnd;
+    }
+
+    const openItems = currentPtItems.filter(openItemsFilter).filter(userFilter).filter(rangeFilter);
+    const closedItems = currentPtItems.filter(closedItemsFilter).filter(userFilter).filter(rangeFilter);
+    const activeItemsCount = openItems.length + closedItems.length;
+
+    res.json({
+        activeItemsCount,
+        closeRate: closedItems.length / activeItemsCount * 100,
+        closedItemsCount: closedItems.length,
+        openItemsCount: openItems.length
+    });
+});
+
+router.get('/stats/prioritycounts', (req: Request, res: Response) => {
+    const pLowItemsFilter = (i: PtItem) => i.priority === 'Low' && i.dateDeleted === undefined;
+    const pMediumItemsFilter = (i: PtItem) => i.priority === 'Medium' && i.dateDeleted === undefined;
+    const pHighItemsFilter = (i: PtItem) => i.priority === 'High' && i.dateDeleted === undefined;
+    const pCriticalItemsFilter = (i: PtItem) => i.priority === 'Critical' && i.dateDeleted === undefined;
+
+    const lowItems = currentPtItems
+        .filter(pLowItemsFilter)
+        .filter(getItemFilterByUser(req))
+        .filter(getItemFilterByDateRange(req));
+    const mediumItems = currentPtItems
+        .filter(pMediumItemsFilter)
+        .filter(getItemFilterByUser(req))
+        .filter(getItemFilterByDateRange(req));
+    const highItems = currentPtItems
+        .filter(pHighItemsFilter)
+        .filter(getItemFilterByUser(req))
+        .filter(getItemFilterByDateRange(req));
+    const criticalItems = currentPtItems
+        .filter(pCriticalItemsFilter)
+        .filter(getItemFilterByUser(req))
+        .filter(getItemFilterByDateRange(req));
+
+    res.json({
+        critical: criticalItems.length,
+        high: highItems.length,
+        low: lowItems.length,
+        medium: mediumItems.length
+    });
+});
+
+router.get('/stats/typecounts', (req: Request, res: Response) => {
+    const tBugItemsFilter = (i: PtItem) => i.type === 'Bug' && i.dateDeleted === undefined;
+    const tChoreItemsFilter = (i: PtItem) => i.type === 'Chore' && i.dateDeleted === undefined;
+    const tImpedimentItemsFilter = (i: PtItem) => i.type === 'Impediment' && i.dateDeleted === undefined;
+    const tPbiItemsFilter = (i: PtItem) => i.type === 'PBI' && i.dateDeleted === undefined;
+
+    const bugItems = currentPtItems
+        .filter(tBugItemsFilter)
+        .filter(getItemFilterByUser(req))
+        .filter(getItemFilterByDateRange(req));
+    const choreItems = currentPtItems
+        .filter(tChoreItemsFilter)
+        .filter(getItemFilterByUser(req))
+        .filter(getItemFilterByDateRange(req));
+    const impedimentItems = currentPtItems
+        .filter(tImpedimentItemsFilter)
+        .filter(getItemFilterByUser(req))
+        .filter(getItemFilterByDateRange(req));
+    const pbiItems = currentPtItems
+        .filter(tPbiItemsFilter)
+        .filter(getItemFilterByUser(req))
+        .filter(getItemFilterByDateRange(req));
+
+    res.json({
+        critical: bugItems.length,
+        high: choreItems.length,
+        low: impedimentItems.length,
+        medium: pbiItems.length
+    });
+});
+
+function getItemFilterByUser(req: Request): (i: PtItem) => boolean {
+    let userFilter = (item: PtItem) => true;
+    if (req.query.userId) {
+        const userId = parseInt(req.query.userId, undefined);
+        if (userId > 0) {
+            userFilter = (item: PtItem) => item.assignee.id === userId;
+        }
+    }
+    return userFilter;
+}
+
+function getItemFilterByDateRange(req: Request): (i: PtItem) => boolean {
+    let rangeFilter = (item: PtItem) => true;
+    if (req.query.dateStart && req.query.dateEnd) {
+        const dateStart = new Date(req.query.dateStart);
+        const dateEnd = new Date(req.query.dateEnd);
+        rangeFilter = (item: PtItem) => item.dateCreated >= dateStart && item.dateCreated <= dateEnd;
+    }
+    return rangeFilter;
+}
+
 // REGISTER OUR ROUTES -------------------------------
 // all of our routes will be prefixed with /api
 app.use('/api', router);
