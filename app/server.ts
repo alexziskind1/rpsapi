@@ -292,9 +292,6 @@ router.post('/task', (req: Request, res: Response) => {
             const newTask = req.body.task as PtTask;
             const itemId = parseInt(req.body.itemId, undefined);
 
-            // tslint:disable-next-line:no-console
-            console.log('new task title: ' + newTask.title);
-
             const foundItem = currentPtItems.find((i) => i.id === itemId && i.dateDeleted === undefined);
 
             if (foundItem) {
@@ -332,12 +329,6 @@ router.put('/task/:id', (req: Request, res: Response) => {
             let found = false;
             const modifiedTask = req.body.task as PtTask;
             const itemId = parseInt(req.body.itemId, undefined);
-
-            // tslint:disable-next-line:no-console
-            console.log('updated task title: ' + modifiedTask.title);
-
-            // tslint:disable-next-line:no-console
-            console.log('updated task complete: ' + modifiedTask.completed);
 
             const foundItem = currentPtItems.find((i) => i.id === itemId && i.dateDeleted === undefined);
 
@@ -380,8 +371,7 @@ router.post('/task/:itemId/:id', (req: Request, res: Response) => {
         const foundItem = currentPtItems.find((i) => i.id === itemId && i.dateDeleted === undefined);
         if (foundItem) {
             let found = false;
-            // tslint:disable-next-line:no-console
-            console.log('found item' + foundItem.tasks.length);
+
             const updatedTasks = foundItem.tasks.map((t) => {
                 if (t.id === taskId) {
                     found = true;
@@ -392,8 +382,6 @@ router.post('/task/:itemId/:id', (req: Request, res: Response) => {
                     return deletedTask;
                 } else { return t; }
             });
-            // tslint:disable-next-line:no-console
-            console.log('updated tasks item' + updatedTasks.length);
 
             const updatedItem = Object.assign({}, foundItem, { tasks: updatedTasks });
 
