@@ -54,7 +54,7 @@ export function generatePTItem(index: number, users: PtUserWithAuth[]): PtItem {
         id: index + 1,
         priority,
         status,
-        tasks: generateTasks(),
+        tasks: generateTasks(date),
         title,
         type,
     };
@@ -62,24 +62,34 @@ export function generatePTItem(index: number, users: PtUserWithAuth[]): PtItem {
     return ptItem;
 }
 
-export function generateTasks(): PtTask[] {
+export function generateTasks(fromDate: Date): PtTask[] {
     const numTasks = _.random(5, 20);
     const tasks = _.times(numTasks, (index: number) => {
-        return generateTask(index);
+        return generateTask(index, fromDate);
     });
     return tasks;
 }
 
-export function generateTask(index: number): PtTask {
-    const date = faker.date.past(1);
+export function generateTask(index: number, fromDate: Date): PtTask {
+    const createdDate = faker.date.between(fromDate, new Date());
+
     const title = toTitleCase(faker.company.bs());
     const task: PtTask = {
         completed: faker.random.boolean(),
-        dateCreated: date,
-        dateModified: date,
+        dateCreated: createdDate,
+        dateModified: createdDate,
         id: index + 1,
         title
     };
+
+    const scheduleTask = faker.random.boolean();
+    if (scheduleTask) {
+        const tempDate = faker.date.between(fromDate, new Date());
+        task.dateStart = new Date(tempDate.getTime());
+        tempDate.setHours(tempDate.getHours() + faker.random.number(60));
+        task.dateEnd = new Date(tempDate.getTime());
+    }
+
     return task;
 }
 
