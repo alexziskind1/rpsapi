@@ -150,7 +150,9 @@ router.post('/register', (req: Request, res: Response) => {
 });
 
 router.get('/users', (req: Request, res: Response) => {
+
     res.json(currentPtUsers);
+
     // let currentPage = 1;
     // if (req.query && req.query.page) {
     //    currentPage = +req.query.page
@@ -584,6 +586,59 @@ router.get('/stats/typecounts', (req: Request, res: Response) => {
     });
 });
 
+interface ItemsForMonth {
+    closed: PtItem[];
+    open: PtItem[];
+}
+
+interface FilteredIssues {
+    categories: Date[];
+    items: ItemsForMonth[];
+}
+
+router.get('/stats/filteredissues', (req: Request, res: Response) => {
+    const openItemsFilter = (i: PtItem) =>
+        (i.status === 'Open' || i.status === 'ReOpened') && i.dateDeleted === undefined;
+    const closedItemsFilter = (i: PtItem) =>
+        i.status === 'Closed' && i.dateDeleted === undefined;
+
+    const items = currentPtItems
+        .filter(getItemFilterByUser(req))
+        .filter(getItemFilterByDateRange(req));
+
+    const maxDate = new Date(Math.max.apply(null, items.map((i) => new Date(i.dateCreated).valueOf())));
+    const minDate = new Date(Math.min.apply(null, items.map((i) => new Date(i.dateCreated).valueOf())));
+
+    const categories = getDates(minDate, maxDate);
+
+    const itemsByMonth = categories.map((c) => {
+        const monthItems = items.filter((i) => {
+            if (i.dateCreated) {
+                const dc = new Date(i.dateCreated);
+                return dc.getMonth() === c.getMonth() &&
+                    dc.getFullYear() === c.getFullYear();
+            }
+        });
+        return monthItems;
+    });
+
+    const categorizedAndDivided = itemsByMonth.map((c): ItemsForMonth => {
+        const openItemsForMonth = c.filter(openItemsFilter);
+        const closedItemsForMonth = c.filter(closedItemsFilter);
+        return {
+            closed: closedItemsForMonth,
+            open: openItemsForMonth
+        };
+    });
+
+    const ret: FilteredIssues = {
+        categories,
+        items: categorizedAndDivided
+    };
+
+    res.json(ret);
+});
+
 function getItemFilterByUser(req: Request): (i: PtItem) => boolean {
     let userFilter = (item: PtItem) => true;
     if (req.query.userId) {
@@ -604,6 +659,22 @@ function getItemFilterByDateRange(req: Request): (i: PtItem) => boolean {
     }
     return rangeFilter;
 }
+
+const addMonths = (to: Date, months: number): Date => {
+    const date = new Date(to.valueOf());
+    date.setMonth(date.getMonth() + months);
+    return date;
+};
+
+const getDates = (startDate: Date, endDate: Date) => {
+    const dates = [];
+    let currentDate = startDate;
+    while (currentDate <= endDate) {
+        dates.push(currentDate);
+        currentDate = addMonths(currentDate, 1);
+    }
+    return dates;
+};
 
 // REGISTER OUR ROUTES -------------------------------
 // all of our routes will be prefixed with /api

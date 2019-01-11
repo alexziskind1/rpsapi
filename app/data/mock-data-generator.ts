@@ -16,7 +16,7 @@ import { ItemTypeEnum, PriorityEnum, StatusEnum } from '../shared/models/domain/
 import { PtItemType } from '../shared/models/domain/types';
 import { toTitleCase } from '../util/string-utils';
 
-const NUM_PT_ITEMS = 200;
+const NUM_PT_ITEMS = 2000;
 const NUM_USERS = 20;
 
 export function generatePTItems(users: PtUserWithAuth[]): PtItem[] {
@@ -27,7 +27,12 @@ export function generatePTItems(users: PtUserWithAuth[]): PtItem[] {
 }
 
 export function generatePTItem(index: number, users: PtUserWithAuth[]): PtItem {
-    const date = faker.date.past(1);
+    const nearFuture = new Date();
+    nearFuture.setMonth(new Date().getMonth() + 1);
+    const date = faker.date.between(
+        faker.date.past(1),
+        nearFuture);
+
     const title = toTitleCase(faker.company.bs());
 
     const typeStr = faker.random.arrayElement(Object.getOwnPropertyNames(ItemTypeEnum));
