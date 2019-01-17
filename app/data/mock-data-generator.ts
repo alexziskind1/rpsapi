@@ -16,7 +16,7 @@ import { ItemTypeEnum, PriorityEnum, StatusEnum } from '../shared/models/domain/
 import { PtItemType } from '../shared/models/domain/types';
 import { toTitleCase } from '../util/string-utils';
 
-const NUM_PT_ITEMS = 2000;
+const NUM_PT_ITEMS = 200;
 const NUM_USERS = 20;
 
 export function generatePTItems(users: PtUserWithAuth[]): PtItem[] {
