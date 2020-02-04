@@ -1,4 +1,5 @@
 import * as bodyParser from 'body-parser';
+import * as fs from 'fs';
 import * as http from 'http';
 
 import express from 'express';
@@ -8,6 +9,7 @@ import * as mockgen from './data/mock-data-generator';
 
 import { PtUserWithAuth } from './shared/models';
 import { PtAuthToken, PtComment, PtItem, PtLoginModel, PtRegisterModel, PtTask, PtUser } from './shared/models/domain';
+import { FilteredIssues, ItemsForMonth } from './shared/models/domain/statistics';
 import { newGuid } from './util/guid';
 
 const port = 8080;
@@ -586,16 +588,6 @@ router.get('/stats/typecounts', (req: Request, res: Response) => {
     });
 });
 
-interface ItemsForMonth {
-    closed: PtItem[];
-    open: PtItem[];
-}
-
-interface FilteredIssues {
-    categories: Date[];
-    items: ItemsForMonth[];
-}
-
 router.get('/stats/filteredissues', (req: Request, res: Response) => {
     const openItemsFilter = (i: PtItem) =>
         (i.status === 'Open' || i.status === 'ReOpened') && i.dateDeleted === undefined;
@@ -675,6 +667,22 @@ const getDates = (startDate: Date, endDate: Date) => {
     }
     return dates;
 };
+
+// error reporting
+
+router.post('/reporterror', (req: Request, res: Response) => {
+    if (req.body) {
+        if (req.body.errorreport) {
+
+            const reportJSONString = req.body.errorreport as string;
+            const fileNameTimeStamp = new Date().toISOString().replace(/T/, '_').replace(/:/g, '_').replace(/\..+/, '');
+            fs.writeFileSync(`errors/error-report-${fileNameTimeStamp}.json`, reportJSONString);
+
+        } else {
+            res.json(null);
+        }
+    }
+});
 
 // REGISTER OUR ROUTES -------------------------------
 // all of our routes will be prefixed with /api
