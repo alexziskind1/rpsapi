@@ -15,11 +15,11 @@ import {
   PtLoginModel,
   PtRegisterModel,
   PtTask,
-  PtUser
+  PtUser,
 } from './shared/models/domain';
 import {
   FilteredIssues,
-  ItemsForMonth
+  ItemsForMonth,
 } from './shared/models/domain/statistics';
 import { newGuid } from './util/guid';
 
@@ -28,7 +28,7 @@ const port = 8080;
 const usersPerPage = 20;
 
 const generatedPtUserWithAuth = mockgen.generateUsers();
-const generatedPtUsers = generatedPtUserWithAuth.map(u => {
+const generatedPtUsers = generatedPtUserWithAuth.map((u) => {
   const user: PtUser = {
     avatar: u.avatar,
     dateCreated: u.dateCreated,
@@ -36,7 +36,7 @@ const generatedPtUsers = generatedPtUserWithAuth.map(u => {
     dateModified: u.dateModified,
     fullName: u.fullName,
     id: u.id,
-    title: u.title
+    title: u.title,
   };
   return user;
 });
@@ -54,7 +54,7 @@ function paginateArray(array: [], pageSize: number, pageNumber: number) {
 function getNextIntergerId(arrayWithIdProp: { id: number }[]) {
   const newId =
     arrayWithIdProp.length > 0
-      ? Math.max(...arrayWithIdProp.map(i => i.id)) + 1
+      ? Math.max(...arrayWithIdProp.map((i) => i.id)) + 1
       : 1;
   return newId;
 }
@@ -81,7 +81,7 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Methods', 'POST, PUT, GET, OPTIONS');
   res.header(
     'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept'
+    'Origin, X-Requested-With, Content-Type, Accept, *'
   );
   next();
 });
@@ -91,7 +91,9 @@ app.use((req, res, next) => {
 const router: Router = express.Router();
 
 router.get('/', (req: Request, res: Response) => {
-  res.json({ message: 'hooray! welcome to our api!!' });
+  setTimeout(() => {
+    res.json({ message: 'hooray! welcome to our api!!' });
+  }, 5000);
 });
 
 router.post('/auth', (req: Request, res: Response) => {
@@ -100,7 +102,7 @@ router.post('/auth', (req: Request, res: Response) => {
       const loginModel = req.body.loginModel as PtLoginModel;
 
       const foundUser = currentPtUsersWithAuth.find(
-        u =>
+        (u) =>
           u.authInfo!.email === loginModel.username &&
           u.authInfo!.password === loginModel.password
       );
@@ -110,11 +112,11 @@ router.post('/auth', (req: Request, res: Response) => {
         const expireDate = new Date(now.setFullYear(now.getFullYear() + 1));
         const authToken: PtAuthToken = {
           dateExpires: expireDate,
-          access_token: newGuid()
+          access_token: newGuid(),
         };
         res.json({
           authToken,
-          user: foundUser
+          user: foundUser,
         });
       } else {
         res.status(401);
@@ -137,13 +139,13 @@ router.post('/register', (req: Request, res: Response) => {
       const expireDate = new Date(now.setFullYear(now.getFullYear() + 1));
       const authToken: PtAuthToken = {
         dateExpires: expireDate,
-        access_token: newGuid()
+        access_token: newGuid(),
       };
 
       const regModel = req.body.registerModel as PtRegisterModel;
 
       const usernameExists = !!currentPtUsersWithAuth.find(
-        u => u.authInfo!.email === regModel.username
+        (u) => u.authInfo!.email === regModel.username
       );
 
       if (usernameExists) {
@@ -155,14 +157,14 @@ router.post('/register', (req: Request, res: Response) => {
         const newUser = {
           authInfo: { email: regModel.username, password: regModel.password },
           fullName: regModel.fullName,
-          id: nextUserId
+          id: nextUserId,
         } as PtUserWithAuth;
 
         currentPtUsersWithAuth = [...currentPtUsersWithAuth, newUser];
 
         res.json({
           authToken,
-          user: newUser
+          user: newUser,
         });
       }
     } else {
@@ -195,6 +197,24 @@ router.get('/users', (req: Request, res: Response) => {
         */
 });
 
+router.get('/summaries', (req: Request, res: Response) => {
+  const ret = currentPtItems.map((i) => {
+    return {
+      id: i.id,
+      title: i.title,
+      type: i.type,
+      priority: i.priority,
+      estimate: i.estimate,
+      status: i.status,
+      assigneeId: i.assignee.id,
+      assigneeName: i.assignee.fullName,
+      assigneeAvatar: i.assignee.avatar,
+      dateCreated: i.dateCreated,
+    };
+  });
+  res.json(ret);
+});
+
 router.get('/backlog', (req: Request, res: Response) => {
   res.json(currentPtItems);
 });
@@ -206,12 +226,12 @@ router.get('/myItems', (req: Request, res: Response) => {
   }
   let found = false;
 
-  if (currentPtUsers.findIndex(u => u.id === userId) >= 0) {
+  if (currentPtUsers.findIndex((u) => u.id === userId) >= 0) {
     found = true;
   }
 
   const filteredItems = currentPtItems.filter(
-    i => i.assignee.id === userId && i.dateDeleted === undefined
+    (i) => i.assignee.id === userId && i.dateDeleted === undefined
   );
 
   if (!found) {
@@ -222,7 +242,7 @@ router.get('/myItems', (req: Request, res: Response) => {
 
 router.get('/openItems', (req: Request, res: Response) => {
   const filteredItems = currentPtItems.filter(
-    i =>
+    (i) =>
       (i.status === 'Open' || i.status === 'ReOpened') &&
       i.dateDeleted === undefined
   );
@@ -231,7 +251,7 @@ router.get('/openItems', (req: Request, res: Response) => {
 
 router.get('/closedItems', (req: Request, res: Response) => {
   const filteredItems = currentPtItems.filter(
-    i => i.status === 'Closed' && i.dateDeleted === undefined
+    (i) => i.status === 'Closed' && i.dateDeleted === undefined
   );
   res.json(filteredItems);
 });
@@ -239,7 +259,7 @@ router.get('/closedItems', (req: Request, res: Response) => {
 router.get('/item/:id', (req: Request, res: Response) => {
   const itemId = parseInt(req.params.id, undefined);
   const foundItem = currentPtItems.find(
-    i => i.id === itemId && i.dateDeleted === undefined
+    (i) => i.id === itemId && i.dateDeleted === undefined
   );
 
   let found = false;
@@ -247,7 +267,7 @@ router.get('/item/:id', (req: Request, res: Response) => {
     found = true;
 
     const undeletedTasks = foundItem.tasks.filter(
-      t => t.dateDeleted === undefined
+      (t) => t.dateDeleted === undefined
     );
     foundItem.tasks = undeletedTasks;
   }
@@ -283,12 +303,12 @@ router.put('/item/:id', (req: Request, res: Response) => {
       const modifiedItem = req.body.item as PtItem;
 
       const foundItem = currentPtItems.find(
-        i => i.id === itemId && i.dateDeleted === undefined
+        (i) => i.id === itemId && i.dateDeleted === undefined
       );
 
       if (foundItem) {
         found = true;
-        const updatedItems = currentPtItems.map(i => {
+        const updatedItems = currentPtItems.map((i) => {
           if (i.id === itemId) {
             return modifiedItem;
           } else {
@@ -309,13 +329,13 @@ router.put('/item/:id', (req: Request, res: Response) => {
 router.delete('/item/:id', (req: Request, res: Response) => {
   const itemId = parseInt(req.params.id, undefined);
   const foundItem = currentPtItems.find(
-    i => i.id === itemId && i.dateDeleted === undefined
+    (i) => i.id === itemId && i.dateDeleted === undefined
   );
   if (foundItem) {
     const itemToDelete = Object.assign({}, foundItem, {
-      dateDeleted: new Date()
+      dateDeleted: new Date(),
     });
-    const updatedItems = currentPtItems.map(i => {
+    const updatedItems = currentPtItems.map((i) => {
       if (i.id === itemId) {
         return itemToDelete;
       } else {
@@ -325,13 +345,13 @@ router.delete('/item/:id', (req: Request, res: Response) => {
     currentPtItems = updatedItems;
     res.json({
       id: itemId,
-      result: true
+      result: true,
     });
   } else {
     res.status(404);
     res.json({
       id: itemId,
-      result: false
+      result: false,
     });
   }
 });
@@ -343,7 +363,7 @@ router.post('/task', (req: Request, res: Response) => {
       const itemId = parseInt(req.body.itemId, undefined);
 
       const foundItem = currentPtItems.find(
-        i => i.id === itemId && i.dateDeleted === undefined
+        (i) => i.id === itemId && i.dateDeleted === undefined
       );
 
       if (foundItem) {
@@ -352,10 +372,10 @@ router.post('/task', (req: Request, res: Response) => {
         const updatedTasks = [newTask, ...foundItem.tasks];
 
         const updatedItem = Object.assign({}, foundItem, {
-          tasks: updatedTasks
+          tasks: updatedTasks,
         });
 
-        const updatedItems = currentPtItems.map(i => {
+        const updatedItems = currentPtItems.map((i) => {
           if (i.id === itemId) {
             return updatedItem;
           } else {
@@ -370,7 +390,7 @@ router.post('/task', (req: Request, res: Response) => {
         res.status(404);
         res.json({
           id: itemId,
-          result: false
+          result: false,
         });
       }
     } else {
@@ -389,11 +409,11 @@ router.put('/task/:id', (req: Request, res: Response) => {
       const itemId = parseInt(req.body.itemId, undefined);
 
       const foundItem = currentPtItems.find(
-        i => i.id === itemId && i.dateDeleted === undefined
+        (i) => i.id === itemId && i.dateDeleted === undefined
       );
 
       if (foundItem) {
-        const updatedTasks = foundItem.tasks.map(t => {
+        const updatedTasks = foundItem.tasks.map((t) => {
           if (t.id === modifiedTask.id) {
             found = true;
             return modifiedTask;
@@ -403,10 +423,10 @@ router.put('/task/:id', (req: Request, res: Response) => {
         });
 
         const updatedItem = Object.assign({}, foundItem, {
-          tasks: updatedTasks
+          tasks: updatedTasks,
         });
 
-        const updatedItems = currentPtItems.map(i => {
+        const updatedItems = currentPtItems.map((i) => {
           if (i.id === itemId) {
             return updatedItem;
           } else {
@@ -437,17 +457,17 @@ router.post('/task/:itemId/:id', (req: Request, res: Response) => {
     const taskId = parseInt(req.params.id, undefined);
 
     const foundItem = currentPtItems.find(
-      i => i.id === itemId && i.dateDeleted === undefined
+      (i) => i.id === itemId && i.dateDeleted === undefined
     );
     if (foundItem) {
       let found = false;
 
-      const updatedTasks = foundItem.tasks.map(t => {
+      const updatedTasks = foundItem.tasks.map((t) => {
         if (t.id === taskId) {
           found = true;
           const deletedTask: PtTask = {
             ...t,
-            dateDeleted: new Date()
+            dateDeleted: new Date(),
           };
           return deletedTask;
         } else {
@@ -457,7 +477,7 @@ router.post('/task/:itemId/:id', (req: Request, res: Response) => {
 
       const updatedItem = Object.assign({}, foundItem, { tasks: updatedTasks });
 
-      const updatedItems = currentPtItems.map(i => {
+      const updatedItems = currentPtItems.map((i) => {
         if (i.id === itemId) {
           return updatedItem;
         } else {
@@ -488,7 +508,7 @@ router.post('/comment', (req: Request, res: Response) => {
       const itemId = parseInt(req.body.itemId, undefined);
 
       const foundItem = currentPtItems.find(
-        i => i.id === itemId && i.dateDeleted === undefined
+        (i) => i.id === itemId && i.dateDeleted === undefined
       );
 
       if (foundItem) {
@@ -497,10 +517,10 @@ router.post('/comment', (req: Request, res: Response) => {
         const updatedComments = [newComment, ...foundItem.comments];
 
         const updatedItem = Object.assign({}, foundItem, {
-          comments: updatedComments
+          comments: updatedComments,
         });
 
-        const updatedItems = currentPtItems.map(i => {
+        const updatedItems = currentPtItems.map((i) => {
           if (i.id === itemId) {
             return updatedItem;
           } else {
@@ -524,7 +544,7 @@ router.post('/comment', (req: Request, res: Response) => {
 router.get('/photo/:id', (req: Request, res: Response) => {
   const userId = parseInt(req.params.id, undefined);
   const user = currentPtUsers.find(
-    u => u.id === userId && u.dateDeleted === undefined
+    (u) => u.id === userId && u.dateDeleted === undefined
   );
 
   if (user) {
@@ -539,20 +559,20 @@ router.delete('/users/:id', (req: Request, res: Response) => {
   const userId = parseInt(req.params.id, undefined);
 
   const user = currentPtUsers.find(
-    u => u.id === userId && u.dateDeleted === undefined
+    (u) => u.id === userId && u.dateDeleted === undefined
   );
 
   if (user) {
     user.dateDeleted = new Date();
     res.json({
       id: userId,
-      result: true
+      result: true,
     });
   } else {
     res.status(404);
     res.json({
       id: userId,
-      result: false
+      result: false,
     });
   }
 });
@@ -563,7 +583,7 @@ router.put('/users/:id', (req: Request, res: Response) => {
 
   let found = false;
 
-  const newUsers = currentPtUsers.map(u => {
+  const newUsers = currentPtUsers.map((u) => {
     if (u.id === userId && u.dateDeleted === undefined) {
       found = true;
       return modifiedUser;
@@ -578,7 +598,7 @@ router.put('/users/:id', (req: Request, res: Response) => {
   }
   res.json({
     id: userId,
-    result: modifiedUser
+    result: modifiedUser,
   });
 });
 
@@ -605,7 +625,7 @@ router.get('/stats/statuscounts', (req: Request, res: Response) => {
     activeItemsCount,
     closeRate: (closedItems.length / activeItemsCount) * 100,
     closedItemsCount: closedItems.length,
-    openItemsCount: openItems.length
+    openItemsCount: openItems.length,
   });
 });
 
@@ -640,7 +660,7 @@ router.get('/stats/prioritycounts', (req: Request, res: Response) => {
     critical: criticalItems.length,
     high: highItems.length,
     low: lowItems.length,
-    medium: mediumItems.length
+    medium: mediumItems.length,
   });
 });
 
@@ -675,7 +695,7 @@ router.get('/stats/typecounts', (req: Request, res: Response) => {
     critical: bugItems.length,
     high: choreItems.length,
     low: impedimentItems.length,
-    medium: pbiItems.length
+    medium: pbiItems.length,
   });
 });
 
@@ -693,20 +713,20 @@ router.get('/stats/filteredissues', (req: Request, res: Response) => {
   const maxDate = new Date(
     Math.max.apply(
       null,
-      items.map(i => new Date(i.dateCreated).valueOf())
+      items.map((i) => new Date(i.dateCreated).valueOf())
     )
   );
   const minDate = new Date(
     Math.min.apply(
       null,
-      items.map(i => new Date(i.dateCreated).valueOf())
+      items.map((i) => new Date(i.dateCreated).valueOf())
     )
   );
 
   const categories = getDates(minDate, maxDate);
 
-  const itemsByMonth = categories.map(c => {
-    const monthItems = items.filter(i => {
+  const itemsByMonth = categories.map((c) => {
+    const monthItems = items.filter((i) => {
       if (i.dateCreated) {
         const dc = new Date(i.dateCreated);
         return (
@@ -723,14 +743,14 @@ router.get('/stats/filteredissues', (req: Request, res: Response) => {
       const closedItemsForMonth = c.filter(closedItemsFilter);
       return {
         closed: closedItemsForMonth,
-        open: openItemsForMonth
+        open: openItemsForMonth,
       };
     }
   );
 
   const ret: FilteredIssues = {
     categories,
-    items: categorizedAndDivided
+    items: categorizedAndDivided,
   };
 
   res.json(ret);
