@@ -222,7 +222,7 @@ router.get('/backlog', (req: Request, res: Response) => {
 router.get('/myItems', (req: Request, res: Response) => {
   let userId: number;
   if (req.query && req.query.userId) {
-    userId = parseInt(req.query.userId, undefined);
+    userId = parseInt(req.query.userId as string, undefined);
   }
   let found = false;
 
@@ -759,7 +759,7 @@ router.get('/stats/filteredissues', (req: Request, res: Response) => {
 function getItemFilterByUser(req: Request): (i: PtItem) => boolean {
   let userFilter = (item: PtItem) => true;
   if (req.query.userId) {
-    const userId = parseInt(req.query.userId, undefined);
+    const userId = parseInt(req.query.userId as string, undefined);
     if (userId > 0) {
       userFilter = (item: PtItem) => item.assignee.id === userId;
     }
@@ -770,8 +770,8 @@ function getItemFilterByUser(req: Request): (i: PtItem) => boolean {
 function getItemFilterByDateRange(req: Request): (i: PtItem) => boolean {
   let rangeFilter = (item: PtItem) => true;
   if (req.query.dateStart && req.query.dateEnd) {
-    const dateStart = new Date(req.query.dateStart);
-    const dateEnd = new Date(req.query.dateEnd);
+    const dateStart = new Date(req.query.dateStart as string);
+    const dateEnd = new Date(req.query.dateEnd as string);
     rangeFilter = (item: PtItem) =>
       item.dateCreated >= dateStart && item.dateCreated <= dateEnd;
   }
