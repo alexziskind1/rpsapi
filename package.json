@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "tsc": "tsc",
-    "dev": "ts-node-dev --respawn --transpileOnly ./app/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only ./app/server.ts",
     "prod": "tsc && node ./build/server.js"
   },
   "author": "",
@@ -21,7 +21,7 @@
     "@types/faker": "4.1.4",
     "@types/lodash": "4.14.119",
     "@types/node": "12.12.2",
-    "ts-node-dev": "1.0.0-pre.44",
+    "ts-node-dev": "1.1.1",
     "tslint": "6.1.0",
     "typescript": "3.8.3"
   },
