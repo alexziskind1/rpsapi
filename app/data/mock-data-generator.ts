@@ -3,6 +3,7 @@ import * as fileSystemModule from 'fs';
 
 // 3rd party imports
 import * as faker from 'faker';
+
 import * as _ from 'lodash';
 
 // app imports
@@ -75,18 +76,18 @@ export function generateTask(index: number, fromDate: Date): PtTask {
 
     const title = toTitleCase(faker.company.bs());
     const task: PtTask = {
-        completed: faker.random.boolean(),
+        completed: faker.datatype.boolean(),
         dateCreated: createdDate,
         dateModified: createdDate,
         id: index + 1,
         title
     };
 
-    const scheduleTask = faker.random.boolean();
+    const scheduleTask = faker.datatype.boolean();
     if (scheduleTask) {
         const tempDate = faker.date.between(fromDate, new Date());
         task.dateStart = new Date(tempDate.getTime());
-        tempDate.setHours(tempDate.getHours() + faker.random.number(60));
+        tempDate.setHours(tempDate.getHours() + faker.datatype.number(60));
         task.dateEnd = new Date(tempDate.getTime());
     }
 
@@ -146,7 +147,7 @@ export function generateUserBase64Avatar(
     avatarsMen: string[],
     avatarsWomen: string[] = []
 ): PtUserWithAuth {
-    const genderBool = faker.random.boolean();
+    const genderBool = faker.datatype.boolean();
     const firstName = faker.name.firstName(genderBool ? 1 : 0);
     const lastName = faker.name.lastName(genderBool ? 1 : 0);
     const date = faker.date.past(1);
@@ -168,7 +169,7 @@ export function generateUserBase64Avatar(
 }
 
 export function generateUser(index: number): PtUserWithAuth {
-    const genderBool = faker.random.boolean();
+    const genderBool = faker.datatype.boolean();
     const firstName = faker.name.firstName(genderBool ? 1 : 0);
     const lastName = faker.name.lastName(genderBool ? 1 : 0);
     const date = faker.date.past(1);

@@ -86,13 +86,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Export app for import in frontend
+export default app;
+
 // ROUTES FOR OUR API
 // =================================================================
 const router: Router = express.Router();
 
 router.get('/', (req: Request, res: Response) => {
   setTimeout(() => {
-    res.json({ message: 'hooray! welcome to our api - codespaces!!' });
+    res.json({ message: 'hooray! welcome to our api!!' });
   }, 5000);
 });
 
